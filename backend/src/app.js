@@ -1,4 +1,6 @@
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const apiRoutes = require('./routes/index');
@@ -6,7 +8,7 @@ const { notFoundHandler, errorHandler } = require('./middlewares/error.middlewar
 
 const app = express();
 
-// CORS Configuration to allow credentials (cookies) from frontend
+// CORS Configuration
 const allowedOrigins = [
   process.env.CLIENT_URL || 'http://localhost:5173',
   'http://localhost:3000',
@@ -16,14 +18,13 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, curl, postman)
       if (!origin || allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
-        callback(null, true); // Allow all during development or customize
+        callback(null, true);
       }
     },
-    credentials: true, // Crucial for sending httpOnly cookies
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
@@ -33,22 +34,37 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Cookie Parser Middleware for reading Refresh Token cookies
+// Cookie Parser Middleware
 app.use(cookieParser());
 
-// Root welcome route
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to Sheryians Coding School - Authentication & Product CRUD API',
-    documentation: '/api/health',
-    version: '1.0.0',
-  });
-});
-
-// API Routes
+// API Routes mounted at /api
 app.use('/api', apiRoutes);
 
-// 404 Handler for undefined routes
+// Serve Frontend Static Files in Production / when dist exists
+const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+
+if (fs.existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+
+  // Catch-all route to serve index.html for client-side routing
+  app.get('*', (req, res, next) => {
+    if (req.originalUrl.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+} else {
+  // Fallback API welcome route if frontend is not yet built
+  app.get('/', (req, res) => {
+    res.json({
+      message: 'Sheryians Store API is running',
+      documentation: '/api/health',
+      version: '1.0.0',
+    });
+  });
+}
+
+// 404 Handler for undefined API routes
 app.use(notFoundHandler);
 
 // Global Error Handler

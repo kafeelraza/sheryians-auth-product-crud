@@ -1,0 +1,21 @@
+{
+  "name": "sheryians-auth-product-crud",
+  "version": "1.0.0",
+  "description": "Sheryians Coding School - Authentication & Product CRUD Platform",
+  "scripts": {
+    "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
+    "start": "node backend/server.js",
+    "seed": "node backend/seed.js",
+    "test": "node backend/test-api.js"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "react",
+    "mongodb",
+    "jwt",
+    "express-validator"
+  ],
+  "author": "",
+  "license": "ISC"
+}
